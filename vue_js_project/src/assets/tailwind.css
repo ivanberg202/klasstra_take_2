@@ -1,0 +1,6 @@
+/* filename: vue_js_project/src/assets/tailwind.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Additional custom styles can go here. */
