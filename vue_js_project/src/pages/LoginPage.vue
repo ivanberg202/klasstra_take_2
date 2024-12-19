@@ -1,3 +1,4 @@
+<!-- filename: vue_js_project/src/pages/LoginPage.vue -->
 <template>
   <DefaultLayout>
     <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded shadow">
@@ -6,14 +7,14 @@
         <input
           v-model="username"
           placeholder="Username or Email"
-          class="w-full mb-2 p-2 border rounded"
+          class="w-full mb-2 p-2 border rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600"
           autocomplete="username"
         />
         <input
           v-model="password"
           type="password"
           placeholder="Password"
-          class="w-full mb-4 p-2 border rounded"
+          class="w-full mb-4 p-2 border rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600"
           autocomplete="current-password"
         />
         <button type="submit" class="bg-primary text-white w-full p-2 rounded">
