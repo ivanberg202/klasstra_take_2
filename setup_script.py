@@ -28,7 +28,7 @@ project_structure = {
   "python_project/app/models/audit_log.py":
     "# filename: app/models/audit_log.py\nfrom sqlalchemy import Column, Integer, String, DateTime, ForeignKey\nfrom sqlalchemy.sql import func\nfrom app.core.database import Base\n\nclass AuditLog(Base):\n    __tablename__ = \"audit_logs\"\n    id = Column(Integer, primary_key=True, index=True)\n    entity_type = Column(String, nullable=False)\n    entity_id = Column(Integer, nullable=False)\n    action = Column(String, nullable=False)\n    performed_by = Column(Integer, ForeignKey(\"users.id\"))\n    timestamp = Column(DateTime(timezone=True), server_default=func.now())\n",
   "python_project/app/schemas/common.py":
-    "# filename: app/schemas/common.py\nfrom pydantic import BaseModel\nfrom datetime import datetime\n\nclass Timestamped(BaseModel):\n    created_at: datetime\n    updated_at: datetime | None\n    class Config:\n        orm_mode = True\n",
+    "# filename: app/schemas/common.py\nfrom pydantic import BaseModel\nfrom datetime import datetime\n\nclass Timestamped(BaseModel):\n    created_at: datetime\n    updated_at: datetime | None\n    class Config:\n        from_attributes = True\n",
   "python_project/app/schemas/user.py":
     "# filename: app/schemas/user.py\nfrom pydantic import BaseModel, EmailStr, constr\nfrom app.schemas.common import Timestamped\n\nclass UserBase(BaseModel):\n    username: str\n    first_name: str\n    last_name: str\n    email: EmailStr\n    role: str\n\nclass UserCreate(UserBase):\n    password: constr(min_length=8)\n\nclass UserOut(UserBase, Timestamped):\n    id: int\n",
   "python_project/app/schemas/class_.py":

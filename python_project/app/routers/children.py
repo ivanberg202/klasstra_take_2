@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.child import ChildBase, ChildOut
 from app.models.child import Child
+from app.models.class_ import Class
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from app.core.config import settings
@@ -17,6 +18,12 @@ def add_child(c: ChildBase, token: str=Depends(oauth2_scheme), db: Session=Depen
     payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
     if not is_parent(payload.get("role")) or payload.get("user_id") != c.parent_id:
         raise HTTPException(status_code=403, detail="Not allowed")
+
+    # Check if the class exists
+    cls = db.query(Class).filter(Class.id == c.class_id).first()
+    if not cls:
+        raise HTTPException(status_code=400, detail="Invalid class_id. Class does not exist.")
+
     ch = Child(**c.dict())
     db.add(ch)
     db.commit()

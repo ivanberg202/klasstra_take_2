@@ -22,3 +22,8 @@ def create_class(c: ClassBase, token: str=Depends(oauth2_scheme), db: Session = 
     db.commit()
     db.refresh(cls)
     return cls
+
+@router.get("/", response_model=list[ClassOut])
+def list_classes(db: Session = Depends(get_db)):
+    # No auth needed, or optionally add auth if required.
+    return db.query(Class).all()

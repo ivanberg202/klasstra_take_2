@@ -2,17 +2,51 @@
 from fastapi import FastAPI
 from app.routers import auth, users, classes, announcements, children, admin
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.database import Base, engine
+from sqlalchemy import text, inspect
+from app.seed import seed  # Import the seed function
+from app.core.config import settings
 
 app = FastAPI(title="Klasstra")
 
+print("Using database:", settings.SQLALCHEMY_DATABASE_URI)
+
+# Reset the database schema on startup
+with engine.connect() as connection:
+    connection = connection.execution_options(isolation_level="AUTOCOMMIT")  # Enable autocommit mode
+
+    inspector = inspect(engine)
+    tables = inspector.get_table_names()
+
+    if tables:
+        print("Dropping all tables except 'alembic_version'...")
+        for table in tables:
+            if table != "alembic_version":
+                connection.execute(text(f"DROP TABLE IF EXISTS {table} CASCADE"))
+                print(f"Dropped table: {table}")
+        print("All applicable tables dropped.")
+    else:
+        print("No tables found. Skipping drop.")
+
+    print("Recreating tables...")
+    Base.metadata.create_all(engine)
+    print("Database tables created.")
+
+# Seed the database with sample data
+print("Seeding the database with sample data...")
+seed()
+print("Database seeding complete.")
+
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Adjust this in production for security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Include API routers
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(classes.router)
