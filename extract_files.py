@@ -2,7 +2,7 @@ import os
 
 def get_files_as_project_structure(base_folder, output_file):
     excluded_dirs = {"node_modules", "env", "migrations", "__pycache__"}
-    excluded_files = {"alembic.ini", "cleanup_script.py", "extract_files_to_json.py", "setup_script.py", "package-lock.json"}
+    excluded_files = {"alembic.ini", "cleanup_script.py", "extract_files.py", "setup_script.py", "package-lock.json", "project_structure.py"}
 
     project_structure = {}
 
@@ -21,10 +21,8 @@ def get_files_as_project_structure(base_folder, output_file):
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                    # Convert content to a single line
-                    single_line_content = content.replace("\n", "\\n")
-                    # Add a header for the file path
-                    single_line_content = f"# filename: {relative_path}\\n" + single_line_content
+                    # Escape content for single-line representation
+                    single_line_content = f"# filename: {relative_path}\\n" + repr(content)
                     project_structure[relative_path] = single_line_content
             except Exception as e:
                 print(f"Error reading file {file_path}: {e}")
@@ -33,11 +31,10 @@ def get_files_as_project_structure(base_folder, output_file):
     with open(output_file, 'w', encoding='utf-8') as out_file:
         out_file.write("project_structure = {\n")
         for path, content in project_structure.items():
-            out_file.write(f'  "{path}": "{content}",\n')
+            out_file.write(f'  "{path}": {content},\n')
         out_file.write("}\n")
 
     print(f"Project structure successfully written to {output_file}")
-
 
 if __name__ == "__main__":
     # Change these paths as needed
