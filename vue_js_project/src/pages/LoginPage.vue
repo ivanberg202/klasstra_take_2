@@ -28,7 +28,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useStore } from 'vuex';
-import axios from 'axios';
+import axios, { setAuthToken } from '../plugins/axios.js'; // Import setAuthToken
 import DefaultLayout from '../layouts/DefaultLayout.vue';
 
 const store = useStore();
@@ -38,8 +38,14 @@ const password = ref('');
 async function login() {
   try {
     const res = await axios.post('/auth/login', { username: username.value, password: password.value });
-    const tokenData = parseJwt(res.data.access_token);
-    store.commit('setAuth', { token: res.data.access_token, role: tokenData.role });
+    const token = res.data.access_token;
+
+    // Use setAuthToken to store the token and set Axios header
+    setAuthToken(token);
+
+    const tokenData = parseJwt(token);
+    store.commit('setAuth', { token, role: tokenData.role });
+
     redirectByRole();
   } catch (err) {
     console.error('Login failed:', err);

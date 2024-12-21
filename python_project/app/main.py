@@ -5,11 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import Base, engine
 from sqlalchemy import text, inspect
 from app.seed import seed  # Import the seed function
-from app.core.config import settings
 
 app = FastAPI(title="Klasstra")
 
-print("Using database:", settings.SQLALCHEMY_DATABASE_URI)
 
 # Reset the database schema on startup
 with engine.connect() as connection:
