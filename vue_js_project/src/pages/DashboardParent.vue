@@ -4,90 +4,73 @@
     <h1 class="text-2xl font-bold mb-4">Parent Dashboard</h1>
     <p>View announcements for your children’s classes.</p>
 
-    <!-- Add Child Form -->
-    <div class="mt-8 p-4 border rounded bg-white dark:bg-gray-800">
-      <h2 class="text-xl font-bold mb-4">Add a Child</h2>
-      <div class="mb-2">
-        <input v-model="firstName" placeholder="Child's First Name" class="w-full p-2 border rounded mb-2" />
-        <input v-model="lastName" placeholder="Child's Last Name" class="w-full p-2 border rounded mb-2" />
-        
-        <select v-model="selectedClassId" class="w-full p-2 border rounded mb-4">
-          <option disabled value="">Select a class</option>
-          <option v-for="cls in classes" :key="cls.id" :value="cls.id">
-            {{ cls.name }}
-          </option>
-        </select>
-        
-        <button @click="addChild" class="bg-primary text-white px-4 py-2 rounded">
-          Add Child
-        </button>
+    <!-- Announcements List -->
+    <div class="mt-8">
+      <h2 class="text-xl font-bold mb-2">Announcements</h2>
+      <div v-if="loadingAnnouncements">
+        <p class="italic">Loading announcements...</p>
+      </div>
+      <div v-else>
+        <div v-if="announcements.length === 0">
+          <p class="italic">No announcements yet.</p>
+        </div>
+        <AnnouncementCard
+          v-for="ann in announcements"
+          :key="ann.id"
+          :title="ann.title"
+          :body="ann.body"
+          :createdBy="ann.created_by"
+          :createdAt="ann.created_at"
+        />
       </div>
     </div>
+
+    <!-- Add Child Component -->
+    <AddChild @childAdded="handleChildAdded" />
   </DefaultLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import DefaultLayout from '../layouts/DefaultLayout.vue';
-import { useStore } from 'vuex';
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+import DefaultLayout from '../layouts/DefaultLayout.vue'
+import AnnouncementCard from '../components/AnnouncementCard.vue'
+import AddChild from '../components/AddChild.vue'
+import { useStore } from 'vuex'
+import { useToast } from 'vue-toastification'
 
-const store = useStore();
-const firstName = ref('');
-const lastName = ref('');
-const selectedClassId = ref('');
-const classes = ref([]);
+const store = useStore()
+const toast = useToast()
 
-onMounted(async () => {
+const announcements = ref([])
+const loadingAnnouncements = ref(false)
+
+// Fetch announcements on mount
+const fetchAnnouncements = async () => {
+  loadingAnnouncements.value = true
   try {
-    console.log("Fetching classes...");
-    const res = await axios.get('/classes');
-    console.log("Classes fetched:", res.data);
-    classes.value = res.data;
-  } catch (err) {
-    console.error("Error fetching classes:", err);
-  }
-});
-
-async function addChild() {
-  try {
-    console.log("Attempting to fetch current user...");
-    console.log("Authorization token:", store.state.token);
-
-    const me = await axios.get('/users/me', {
-      headers: { Authorization: `Bearer ${store.state.token}` }
-    });
-
-    console.log("Current user data:", me.data);
-
-    console.log("Adding child with details:", {
-      parent_id: me.data.id,
-      first_name: firstName.value,
-      last_name: lastName.value,
-      class_id: selectedClassId.value
-    });
-
-    const res = await axios.post(
-      '/children',
-      {
-        parent_id: me.data.id,
-        first_name: firstName.value,
-        last_name: lastName.value,
-        class_id: selectedClassId.value
-      },
-      {
-        headers: { Authorization: `Bearer ${store.state.token}` }
+    const res = await axios.get('/announcements/for_parent', {
+      headers: {
+        Authorization: `Bearer ${store.state.token}`
       }
-    );
-
-    console.log("Child added successfully:", res.data);
-
-    // Clear form
-    firstName.value = '';
-    lastName.value = '';
-    selectedClassId.value = '';
+    })
+    announcements.value = res.data
   } catch (err) {
-    console.error("Error adding child:", err);
+    console.error('Error fetching parent announcements:', err)
+    toast.error('Failed to load announcements.')
+  } finally {
+    loadingAnnouncements.value = false
   }
+}
+
+onMounted(() => {
+  fetchAnnouncements()
+})
+
+// Handle child added event
+const handleChildAdded = () => {
+  toast.success('Child added successfully!')
+  // Optionally, refresh announcements in case new class announcements are relevant
+  fetchAnnouncements()
 }
 </script>

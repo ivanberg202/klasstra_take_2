@@ -8,6 +8,14 @@ from app.seed import seed  # Import the seed function
 
 app = FastAPI(title="Klasstra")
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this in production for security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Reset the database schema on startup
 with engine.connect() as connection:
@@ -35,14 +43,6 @@ print("Seeding the database with sample data...")
 seed()
 print("Database seeding complete.")
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Adjust this in production for security
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Include API routers
 app.include_router(auth.router)

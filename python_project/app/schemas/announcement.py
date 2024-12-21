@@ -1,6 +1,7 @@
-# filename: app/schemas/announcement.py
+# schemas/announcement.py
+from datetime import datetime
 from pydantic import BaseModel
-from app.schemas.common import Timestamped
+from app.schemas.user import UserOut  # or a simpler user schema
 
 class AnnouncementBase(BaseModel):
     title: str
@@ -11,7 +12,19 @@ class AnnouncementBase(BaseModel):
 class AnnouncementCreate(AnnouncementBase):
     pass
 
-class AnnouncementOut(AnnouncementBase, Timestamped):
+class AnnouncementOut(BaseModel):
     id: int
-    created_by: int
-    last_updated_by: int | None
+    title: str
+    body: str
+
+    # "created_by" is now a full user object, not an int
+    created_by: UserOut
+    last_updated_by: UserOut | None
+    
+    recipient_type: str
+    recipient_id: int
+    created_at: datetime
+    updated_at: datetime | None
+    
+    class Config:
+        from_attributes = True

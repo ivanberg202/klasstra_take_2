@@ -18,7 +18,8 @@ def seed():
     db = SessionLocal()
     try:
         # Create an admin user if not exists
-        if not db.query(User).filter(User.username == "admin").first():
+        admin = db.query(User).filter(User.username == "admin").first()
+        if not admin:
             admin = User(
                 username="admin",
                 first_name="Admin",
@@ -34,7 +35,8 @@ def seed():
             print("Admin user already exists.")
 
         # Create a teacher user if not exists
-        if not db.query(User).filter(User.username == "teacher1").first():
+        teacher = db.query(User).filter(User.username == "teacher1").first()
+        if not teacher:
             teacher = User(
                 username="teacher1",
                 first_name="John",
@@ -50,7 +52,8 @@ def seed():
             print("Teacher user already exists.")
 
         # Create a parent user if not exists
-        if not db.query(User).filter(User.username == "parent1").first():
+        parent = db.query(User).filter(User.username == "parent1").first()
+        if not parent:
             parent = User(
                 username="parent1",
                 first_name="Jane",
@@ -107,19 +110,22 @@ def seed():
             print("Children already exist for parent1.")
 
         # Create announcements from the teacher
-        existing_announcements = db.query(Announcement).filter(Announcement.created_by == teacher_user.id).all()
+        # Corrected comparison using 'created_by_id'
+        existing_announcements = db.query(Announcement).filter(
+            Announcement.created_by_id == teacher_user.id
+        ).all()
         if not existing_announcements:
             announcement1 = Announcement(
                 title="Welcome to Mathematics!",
                 body="We will start with algebra basics next week.",
-                created_by=teacher_user.id,
+                created_by_id=teacher_user.id,  # Use 'created_by_id' instead of 'created_by'
                 recipient_type="class",
                 recipient_id=class_objects[0].id,  # Mathematics
             )
             announcement2 = Announcement(
                 title="Science Fair Reminder",
                 body="Don't forget to register for the upcoming science fair.",
-                created_by=teacher_user.id,
+                created_by_id=teacher_user.id,  # Use 'created_by_id' instead of 'created_by'
                 recipient_type="class",
                 recipient_id=class_objects[1].id,  # Science
             )
@@ -129,6 +135,8 @@ def seed():
         else:
             print("Announcements already exist for teacher1.")
 
+    except Exception as e:
+        print(f"An error occurred during seeding: {e}")
     finally:
         db.close()
 

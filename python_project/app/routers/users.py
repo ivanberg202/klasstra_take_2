@@ -8,6 +8,8 @@ from app.schemas.user import UserCreate, UserOut
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from app.core.config import settings
+from app.utils.roles import can_manage_users
+from fastapi import Path
 
 router = APIRouter(prefix="/users", tags=["users"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -36,4 +38,20 @@ def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username==username).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid token")
+    return user
+
+@router.get("/{user_id}", response_model=UserOut)
+def get_user(user_id: int = Path(..., ge=1), token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    """
+    Retrieve a user's information by their ID.
+    Only accessible by admins.
+    """
+    payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    role = payload.get("role")
+    if not can_manage_users(role):
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     return user
