@@ -29,3 +29,24 @@ def add_child(c: ChildBase, token: str=Depends(oauth2_scheme), db: Session=Depen
     db.commit()
     db.refresh(ch)
     return ch
+
+@router.get("/my", response_model=list[ChildOut])
+def get_my_children(
+    token: str = Depends(oauth2_scheme), 
+    db: Session = Depends(get_db)
+):
+    """
+    Returns a list of children for the currently logged-in parent/class_rep.
+    """
+    # Decode token
+    payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    user_role = payload.get("role")
+    user_id = payload.get("user_id")
+    
+    # Ensure only parents (or class_reps) can fetch children
+    if not is_parent(user_role):
+        raise HTTPException(status_code=403, detail="Not allowed")
+    
+    # Query all children that belong to this parent’s user_id
+    children = db.query(Child).filter(Child.parent_id == user_id).all()
+    return children

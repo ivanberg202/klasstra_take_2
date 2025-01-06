@@ -25,6 +25,28 @@
       </div>
     </div>
 
+    <!-- Children List -->
+    <div class="mt-8">
+      <h2 class="text-xl font-bold mb-2">My Children</h2>
+      <div v-if="loadingChildren">
+        <p class="italic">Loading children...</p>
+      </div>
+      <div v-else>
+        <div v-if="children.length === 0">
+          <p class="italic">No children registered yet.</p>
+        </div>
+        <ul>
+          <li
+            v-for="child in children"
+            :key="child.id"
+            class="bg-white dark:bg-gray-700 p-2 rounded mb-2"
+          >
+            {{ child.first_name }} {{ child.last_name }} (Class ID: {{ child.class_id }})
+          </li>
+        </ul>
+      </div>
+    </div>
+
     <!-- Add Child Component -->
     <AddChild @childAdded="handleChildAdded" />
   </DefaultLayout>
@@ -42,8 +64,13 @@ import { useToast } from 'vue-toastification'
 const store = useStore()
 const toast = useToast()
 
+// Announcements
 const announcements = ref([])
 const loadingAnnouncements = ref(false)
+
+// Children
+const children = ref([])
+const loadingChildren = ref(false)
 
 // Fetch announcements on mount
 const fetchAnnouncements = async () => {
@@ -63,14 +90,34 @@ const fetchAnnouncements = async () => {
   }
 }
 
+// Fetch children on mount
+const fetchChildren = async () => {
+  loadingChildren.value = true
+  try {
+    const res = await axios.get('/children/my', {
+      headers: {
+        Authorization: `Bearer ${store.state.token}`
+      }
+    })
+    children.value = res.data
+  } catch (err) {
+    console.error('Error fetching children:', err)
+    toast.error('Failed to load children.')
+  } finally {
+    loadingChildren.value = false
+  }
+}
+
+// On component mount
 onMounted(() => {
   fetchAnnouncements()
+  fetchChildren()
 })
 
-// Handle child added event
+// If a child is added, re-fetch announcements (if you want) and children
 const handleChildAdded = () => {
   toast.success('Child added successfully!')
-  // Optionally, refresh announcements in case new class announcements are relevant
   fetchAnnouncements()
+  fetchChildren()
 }
 </script>
