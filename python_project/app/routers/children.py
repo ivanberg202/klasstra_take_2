@@ -1,6 +1,6 @@
 # filename: app/routers/children.py
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.schemas.child import ChildBase, ChildOut
 from app.models.child import Child
@@ -36,10 +36,15 @@ def get_my_children(
     db: Session = Depends(get_db)
 ):
     """
-    Returns a list of children for the currently logged-in parent/class_rep.
+    Returns a list of children for the currently logged-in parent/class_rep,
+    including the class name for each child.
     """
     # Decode token
-    payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    except jwt.JWTError:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    
     user_role = payload.get("role")
     user_id = payload.get("user_id")
     
@@ -47,6 +52,7 @@ def get_my_children(
     if not is_parent(user_role):
         raise HTTPException(status_code=403, detail="Not allowed")
     
-    # Query all children that belong to this parent’s user_id
-    children = db.query(Child).filter(Child.parent_id == user_id).all()
+    # Query all children that belong to this parent’s user_id, joining with Class
+    children = db.query(Child).options(joinedload(Child.class_)).filter(Child.parent_id == user_id).all()
+    
     return children

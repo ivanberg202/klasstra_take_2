@@ -69,7 +69,7 @@ def seed():
             print("Parent user already exists.")
 
         # Create sample classes if not exists
-        sample_classes = ["Mathematics", "Science", "History", "Art", "Physical Education"]
+        sample_classes = ["F1", "F2", "F3", "F4", "F5", "F6"]
         class_objects = []
         for class_name in sample_classes:
             existing_class = db.query(Class).filter(Class.name == class_name).first()
@@ -95,13 +95,13 @@ def seed():
                 parent_id=parent_user.id,
                 first_name="Alice",
                 last_name="Smith",
-                class_id=class_objects[0].id,  # Mathematics
+                class_id=class_objects[0].id,  # F1
             )
             child2 = Child(
                 parent_id=parent_user.id,
                 first_name="Bob",
                 last_name="Smith",
-                class_id=class_objects[1].id,  # Science
+                class_id=class_objects[1].id,  # F2
             )
             db.add_all([child1, child2])
             db.commit()
@@ -116,18 +116,18 @@ def seed():
         ).all()
         if not existing_announcements:
             announcement1 = Announcement(
-                title="Welcome to Mathematics!",
-                body="We will start with algebra basics next week.",
+                title="Welcome to F1!",
+                body="We will start with basic lessons next week.",
                 created_by_id=teacher_user.id,  # Use 'created_by_id' instead of 'created_by'
                 recipient_type="class",
-                recipient_id=class_objects[0].id,  # Mathematics
+                recipient_id=class_objects[0].id,  # F1
             )
             announcement2 = Announcement(
-                title="Science Fair Reminder",
-                body="Don't forget to register for the upcoming science fair.",
+                title="F2 Activity Reminder",
+                body="Don't forget to prepare for the upcoming activity.",
                 created_by_id=teacher_user.id,  # Use 'created_by_id' instead of 'created_by'
                 recipient_type="class",
-                recipient_id=class_objects[1].id,  # Science
+                recipient_id=class_objects[1].id,  # F2
             )
             db.add_all([announcement1, announcement2])
             db.commit()

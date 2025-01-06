@@ -1,4 +1,3 @@
-<!-- filename: vue_js_project/src/pages/DashboardParent.vue -->
 <template>
   <DefaultLayout>
     <h1 class="text-2xl font-bold mb-4">Parent Dashboard</h1>
@@ -35,15 +34,14 @@
         <div v-if="children.length === 0">
           <p class="italic">No children registered yet.</p>
         </div>
-        <ul>
-          <li
-            v-for="child in children"
-            :key="child.id"
-            class="bg-white dark:bg-gray-700 p-2 rounded mb-2"
-          >
-            {{ child.first_name }} {{ child.last_name }} (Class ID: {{ child.class_id }})
-          </li>
-        </ul>
+        <ChildCard
+          v-for="child in children"
+          :key="child.id"
+          :firstName="child.first_name"
+          :lastName="child.last_name"
+          :className="child.class_.name" 
+          :createdAt="child.created_at"
+        />
       </div>
     </div>
 
@@ -57,6 +55,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import DefaultLayout from '../layouts/DefaultLayout.vue'
 import AnnouncementCard from '../components/AnnouncementCard.vue'
+import ChildCard from '../components/ChildCard.vue'
 import AddChild from '../components/AddChild.vue'
 import { useStore } from 'vuex'
 import { useToast } from 'vue-toastification'
@@ -121,3 +120,7 @@ const handleChildAdded = () => {
   fetchChildren()
 }
 </script>
+
+<style scoped>
+/* Add any component-specific styles here */
+</style>
