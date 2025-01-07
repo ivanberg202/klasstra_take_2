@@ -2,7 +2,7 @@
 <template>
   <DefaultLayout>
     <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded shadow">
-      <h1 class="text-xl font-bold mb-4">Login</h1>
+      <h1 class="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Login</h1>
       <form @submit.prevent="login">
         <input
           v-model="username"
@@ -21,6 +21,12 @@
           Login
         </button>
       </form>
+      <div class="mt-4 text-center">
+        <p class="text-gray-600 dark:text-gray-400">
+          Don't have an account?
+          <a href="/register" class="text-primary hover:underline">Register here</a>
+        </p>
+      </div>
     </div>
   </DefaultLayout>
 </template>
@@ -28,7 +34,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useStore } from 'vuex';
-import axios, { setAuthToken } from '../plugins/axios.js'; // Import setAuthToken
+import axios, { setAuthToken } from '../plugins/axios.js';
 import DefaultLayout from '../layouts/DefaultLayout.vue';
 
 const store = useStore();
@@ -40,7 +46,6 @@ async function login() {
     const res = await axios.post('/auth/login', { username: username.value, password: password.value });
     const token = res.data.access_token;
 
-    // Use setAuthToken to store the token and set Axios header
     setAuthToken(token);
 
     const tokenData = parseJwt(token);
