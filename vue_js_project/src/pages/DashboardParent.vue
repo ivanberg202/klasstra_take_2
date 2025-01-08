@@ -1,3 +1,4 @@
+<!-- filename: src/pages/DashboardParent.vue -->
 <template>
   <DefaultLayout>
     <h1 class="text-2xl font-bold mb-4">Parent Dashboard</h1>
@@ -16,10 +17,7 @@
         <AnnouncementCard
           v-for="ann in announcements"
           :key="ann.id"
-          :title="ann.title"
-          :body="ann.body"
-          :createdBy="ann.created_by"
-          :createdAt="ann.created_at"
+          :announcement="ann"
         />
       </div>
     </div>
@@ -52,7 +50,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import axios from '../plugins/axios.js'
 import DefaultLayout from '../layouts/DefaultLayout.vue'
 import AnnouncementCard from '../components/AnnouncementCard.vue'
 import ChildCard from '../components/ChildCard.vue'
@@ -71,7 +69,7 @@ const loadingAnnouncements = ref(false)
 const children = ref([])
 const loadingChildren = ref(false)
 
-// Fetch announcements on mount
+// Fetch announcements
 const fetchAnnouncements = async () => {
   loadingAnnouncements.value = true
   try {
@@ -81,6 +79,7 @@ const fetchAnnouncements = async () => {
       }
     })
     announcements.value = res.data
+    console.log('Fetched Announcements:', announcements.value) // Debugging
   } catch (err) {
     console.error('Error fetching parent announcements:', err)
     toast.error('Failed to load announcements.')
@@ -89,7 +88,7 @@ const fetchAnnouncements = async () => {
   }
 }
 
-// Fetch children on mount
+// Fetch children
 const fetchChildren = async () => {
   loadingChildren.value = true
   try {
@@ -99,6 +98,7 @@ const fetchChildren = async () => {
       }
     })
     children.value = res.data
+    console.log('Fetched Children:', children.value) // Debugging
   } catch (err) {
     console.error('Error fetching children:', err)
     toast.error('Failed to load children.')

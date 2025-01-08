@@ -1,11 +1,10 @@
 # filename: app/main.py
 from fastapi import FastAPI
-from app.routers import auth, users, classes, announcements, children, admin
+from app.routers import auth, users, classes, announcements, children, admin, teacher, upload, parents
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import Base, engine
 from sqlalchemy import text, inspect
 from app.seed import seed  # Import the seed function
-from app.routers import teacher  # <-- Import the teacher router
 
 
 app = FastAPI(title="Klasstra")
@@ -54,4 +53,7 @@ app.include_router(announcements.router)
 app.include_router(children.router)
 app.include_router(admin.router)
 app.include_router(teacher.router)
+app.include_router(upload.router)
+app.include_router(parents.router)
+
 

@@ -1,30 +1,35 @@
-# schemas/announcement.py
-from datetime import datetime
+# filename: app/schemas/announcement.py
+
 from pydantic import BaseModel
-from app.schemas.user import UserOut  # or a simpler user schema
+from typing import List, Optional
+from datetime import datetime
+from app.schemas.user import UserOut  # Ensure this is correctly imported
 
 class AnnouncementBase(BaseModel):
     title: str
     body: str
-    recipient_type: str
-    recipient_id: int
 
 class AnnouncementCreate(AnnouncementBase):
-    pass
+    attachment_url: Optional[str] = None
+    classes: List[int] = []
+    parents: List[int] = []
 
 class AnnouncementOut(BaseModel):
     id: int
     title: str
     body: str
-
-    # "created_by" is now a full user object, not an int
     created_by: UserOut
-    last_updated_by: UserOut | None
-    
+    last_updated_by: Optional[UserOut]
     recipient_type: str
     recipient_id: int
+    attachment_url: Optional[str]
     created_at: datetime
-    updated_at: datetime | None
-    
+    updated_at: Optional[datetime]
+
     class Config:
-        from_attributes = True
+        orm_mode = True
+
+class AnnouncementUpdate(BaseModel):
+    title: Optional[str] = None
+    body: Optional[str] = None
+    attachment_url: Optional[str] = None

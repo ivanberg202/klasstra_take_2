@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.models.class_ import Class
 from app.schemas.class_ import ClassBase, ClassOut
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt
+from jose import jwt  # type: ignore
 from app.core.config import settings
 from app.utils.roles import can_manage_users
 

@@ -12,6 +12,7 @@ from app.models.user import User
 from app.models.class_ import Class
 from app.models.child import Child
 from app.models.announcement import Announcement
+from app.models.teacher_class import TeacherClass  # Import TeacherClass model
 from app.core.security import hash_password
 
 def seed():
@@ -87,6 +88,27 @@ def seed():
         # Retrieve parent and teacher users
         parent_user = db.query(User).filter(User.username == "parent1").first()
         teacher_user = db.query(User).filter(User.username == "teacher1").first()
+
+        # Assign teacher to specific classes (e.g., F1 and F2)
+        # Define the classes to assign the teacher to
+        classes_to_assign = ["F1", "F2"]
+        for cls in class_objects:
+            if cls.name in classes_to_assign:
+                # Check if the assignment already exists
+                existing_assignment = db.query(TeacherClass).filter(
+                    TeacherClass.teacher_id == teacher_user.id,
+                    TeacherClass.class_id == cls.id
+                ).first()
+                if not existing_assignment:
+                    assignment = TeacherClass(
+                        teacher_id=teacher_user.id,
+                        class_id=cls.id
+                    )
+                    db.add(assignment)
+                    db.commit()
+                    print(f"Assigned teacher1 to class '{cls.name}'.")
+                else:
+                    print(f"Teacher1 is already assigned to class '{cls.name}'.")
 
         # Create children for the parent
         existing_children = db.query(Child).filter(Child.parent_id == parent_user.id).all()

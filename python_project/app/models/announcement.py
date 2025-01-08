@@ -1,4 +1,5 @@
 # filename: app/models/announcement.py
+
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -16,7 +17,7 @@ class Announcement(Base):
     recipient_type = Column(String, nullable=False)   # "class" or "parent"
     recipient_id = Column(Integer, nullable=False)    # class_id or user_id
 
-    # Optional: store a file path or URL if there's an attachment
+    # Optional: store a file path or URL if there’s an attachment
     attachment_url = Column(String, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -7,10 +7,10 @@ from app.models.user import User
 from app.models.class_ import Class
 from app.models.teacher_class import TeacherClass
 from app.models.announcement import Announcement
-from app.schemas.announcement import AnnouncementOut
+from app.schemas.announcement import AnnouncementOut, AnnouncementCreate, AnnouncementUpdate
 from app.core.config import settings
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt
+from jose import jwt  # type: ignore
 from app.utils.roles import can_create_announcements
 from app.schemas.class_ import ClassOut  # Import the correct schema
 
@@ -70,89 +70,70 @@ def get_my_announcements(token: str = Depends(oauth2_scheme), db: Session = Depe
 
 @router.post("/announcements", response_model=List[AnnouncementOut])
 def create_teacher_announcements(
-    title: str,
-    body: str,
-    attachment_url: str | None = None,
-    classes: List[int] = [],
-    parents: List[int] = [],
+    announcement: AnnouncementCreate,
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    """
-    Create announcements for one or more class IDs or parent IDs.
-    We'll insert multiple Announcement rows, one per recipient.
-    """
-    payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    # Decode JWT token
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    except jwt.JWTError:
+        raise HTTPException(status_code=403, detail="Could not validate credentials")
+    
     user_id = payload.get("user_id")
     role = payload.get("role")
-    if not can_create_announcements(role) or role != "teacher":
+    
+    if not can_create_announcements(role):
         raise HTTPException(status_code=403, detail="Not allowed")
-
+    
+    # Fetch the teacher user
+    teacher_user = db.query(User).filter(User.id == user_id, User.role == "teacher").first()
+    if not teacher_user:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+    
     new_announcements = []
-    # For each class
-    for cid in classes:
+    
+    # Create announcements for classes
+    for class_id in announcement.classes:
+        cls = db.query(Class).filter(Class.id == class_id).first()
+        if not cls:
+            raise HTTPException(status_code=400, detail=f"Class with id {class_id} does not exist")
+        
         ann = Announcement(
-            title=title,
-            body=body,
-            attachment_url=attachment_url,
-            created_by_id=user_id,
-            last_updated_by_id=user_id,
+            title=announcement.title,
+            body=announcement.body,
+            attachment_url=announcement.attachment_url,
+            created_by_id=teacher_user.id,
             recipient_type="class",
-            recipient_id=cid
+            recipient_id=class_id
         )
         db.add(ann)
         new_announcements.append(ann)
-
-    # For each parent
-    for pid in parents:
+    
+    # Create announcements for parents
+    for parent_id in announcement.parents:
+        parent_user = db.query(User).filter(User.id == parent_id, User.role == "parent").first()
+        if not parent_user:
+            raise HTTPException(status_code=400, detail=f"Parent with id {parent_id} does not exist")
+        
         ann = Announcement(
-            title=title,
-            body=body,
-            attachment_url=attachment_url,
-            created_by_id=user_id,
-            last_updated_by_id=user_id,
+            title=announcement.title,
+            body=announcement.body,
+            attachment_url=announcement.attachment_url,
+            created_by_id=teacher_user.id,
             recipient_type="parent",
-            recipient_id=pid
+            recipient_id=parent_id
         )
         db.add(ann)
         new_announcements.append(ann)
-
+    
     db.commit()
-    for a in new_announcements:
-        db.refresh(a)
+    
+    # Refresh and collect the announcements to return
+    for ann in new_announcements:
+        db.refresh(ann)
+    
     return new_announcements
-
-
-@router.patch("/announcements/{announcement_id}", response_model=AnnouncementOut)
-def edit_teacher_announcement(
-    announcement_id: int,
-    title: str | None = None,
-    body: str | None = None,
-    attachment_url: str | None = None,
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
-):
-    """Edit an announcement if you are the creator."""
-    payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-    teacher_id = payload.get("user_id")
-    role = payload.get("role")
-    if role != "teacher":
-        raise HTTPException(status_code=403, detail="Not allowed")
-
-    ann = db.query(Announcement).filter(Announcement.id == announcement_id).first()
-    if not ann:
-        raise HTTPException(status_code=404, detail="Announcement not found")
-    if ann.created_by_id != teacher_id:
-        raise HTTPException(status_code=403, detail="You can only edit your own announcement")
-
-    if title: ann.title = title
-    if body: ann.body = body
-    if attachment_url is not None:
-        ann.attachment_url = attachment_url
-    ann.last_updated_by_id = teacher_id
-    db.commit()
-    db.refresh(ann)
-    return ann
 
 
 @router.delete("/announcements/{announcement_id}")
@@ -177,3 +158,52 @@ def delete_teacher_announcement(
     db.delete(ann)
     db.commit()
     return {"detail": "Announcement deleted"}
+
+
+@router.patch("/announcements/{announcement_id}", response_model=AnnouncementOut)
+def update_teacher_announcement(
+    announcement_id: int,
+    announcement_data: AnnouncementUpdate,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    """
+    Update an existing announcement (title, body, attachment_url).
+    Only the teacher who created the announcement can update it.
+    """
+    # Decode token
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    except:
+        raise HTTPException(status_code=403, detail="Could not validate credentials")
+
+    user_id = payload.get("user_id")
+    role = payload.get("role")
+
+    # Check if user can create/edit announcements
+    if not can_create_announcements(role):
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    # Retrieve the announcement
+    ann = db.query(Announcement).filter(Announcement.id == announcement_id).first()
+    if not ann:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+
+    # Ensure the logged-in teacher is the creator
+    if ann.created_by_id != user_id:
+        raise HTTPException(status_code=403, detail="You can only update your own announcement")
+
+    # Apply updates
+    if announcement_data.title is not None:
+        ann.title = announcement_data.title
+    if announcement_data.body is not None:
+        ann.body = announcement_data.body
+    if announcement_data.attachment_url is not None:
+        ann.attachment_url = announcement_data.attachment_url
+
+    # Record who last updated it
+    ann.last_updated_by_id = user_id
+
+    db.commit()
+    db.refresh(ann)
+    return ann

@@ -6,7 +6,7 @@ from app.schemas.child import ChildBase, ChildOut
 from app.models.child import Child
 from app.models.class_ import Class
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt
+from jose import jwt  # type: ignore
 from app.core.config import settings
 from app.utils.roles import is_parent
 

@@ -1,4 +1,5 @@
 import os
+import datetime  # Import datetime module to handle date and time
 
 def get_files_as_project_structure(base_folder, output_file):
     excluded_dirs = {"node_modules", "env", "migrations", "__pycache__"}
@@ -27,8 +28,13 @@ def get_files_as_project_structure(base_folder, output_file):
             except Exception as e:
                 print(f"Error reading file {file_path}: {e}")
 
-    # Write the project structure to the output file
+    # Get current date and time
+    now = datetime.datetime.now()
+    formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")  # Format the datetime as desired
+
+    # Write the project structure to the output file with date and time at the top
     with open(output_file, 'w', encoding='utf-8') as out_file:
+        out_file.write(f"# Generated on {formatted_now}\n")  # Add timestamp as a comment
         out_file.write("project_structure = {\n")
         for path, content in project_structure.items():
             out_file.write(f'  "{path}": {content},\n')

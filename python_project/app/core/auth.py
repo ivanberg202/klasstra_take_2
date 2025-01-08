@@ -1,6 +1,6 @@
 # filename: app/core/auth.py
 from datetime import datetime, timedelta
-from jose import jwt
+from jose import jwt  # type: ignore
 from app.core.config import settings
 
 def create_access_token(data: dict, expires_delta: int = 3600):

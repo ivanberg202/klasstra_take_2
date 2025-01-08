@@ -1,4 +1,4 @@
-// filename: vue_js_project/src/main.js
+// filename: src/main.js
 import { createApp } from 'vue';
 import App from './App.vue';
 import './assets/tailwind.css';
@@ -6,6 +6,9 @@ import router from './router';
 import store from './store';
 import Toast from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
+
+// Rehydrate the auth state from localStorage
+store.commit('rehydrateAuth');
 
 // Create the Vue app
 const app = createApp(App);
