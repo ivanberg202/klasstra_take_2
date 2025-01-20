@@ -1,0 +1,19 @@
+Commands:
+
+Activate env:
+source python_project/env/bin/activate
+
+Exract files (for chatGPT):
+python extract_files.py
+
+Run python part:
+PYTHONPATH=python_project uvicorn python_project.app.main:app --reload
+
+Run vue_js_project (separate terminal, from vue_js_project directory):
+cd vue_js_project
+npm run dev
+
+Git:
+git add .
+git commit -m "Publish exemplary commit text."
+git push origin main

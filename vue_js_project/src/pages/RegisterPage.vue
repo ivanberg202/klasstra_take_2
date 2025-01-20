@@ -75,32 +75,69 @@
 </template>
 
 <script setup>
-import { ref } from 'vue' // Import ref from Vue
-import axios from 'axios'
-import DefaultLayout from '../layouts/DefaultLayout.vue'
-import { useStore } from 'vuex'
-import { setAuthToken } from '../plugins/axios.js' // Ensure this function is exported
+import { ref } from 'vue';
+import axios, { setAuthToken } from '../plugins/axios.js';
+import DefaultLayout from '../layouts/DefaultLayout.vue';
+import { useStore } from 'vuex';
 
-const store = useStore()
+const store = useStore();
 
 // Reactive state variables
-const username = ref('')
-const firstName = ref('')
-const lastName = ref('')
-const email = ref('')
-const password = ref('')
-const role = ref('')
-const isSubmitting = ref(false)
-const successMessage = ref('')
-const errorMessage = ref('')
+const username = ref('');
+const firstName = ref('');
+const lastName = ref('');
+const email = ref('');
+const password = ref('');
+const role = ref('');
+const isSubmitting = ref(false);
+const successMessage = ref('');
+const errorMessage = ref('');
 
-// Registration function
+/**
+ * Function to decode JWT token
+ */
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Failed to parse JWT:', e);
+    return {};
+  }
+}
+
+/**
+ * Redirect based on user role
+ */
+function redirectByRole(role) {
+  if (role === 'teacher') {
+    location.href = '/teacher';
+  } else if (role === 'parent' || role === 'class_rep') {
+    location.href = '/parent';
+  } else if (role === 'admin') {
+    location.href = '/admin';
+  } else {
+    location.href = '/';
+  }
+}
+
+/**
+ * Registration function with auto-login afterwards.
+ * The auto-login call now sends form-encoded data.
+ */
 async function register() {
   // Reset messages
-  successMessage.value = ''
-  errorMessage.value = ''
+  successMessage.value = '';
+  errorMessage.value = '';
 
-  // Frontend Validation
+  // Frontend validation
   if (
     !username.value ||
     !firstName.value ||
@@ -109,90 +146,57 @@ async function register() {
     !password.value ||
     !role.value
   ) {
-    errorMessage.value = 'All fields are required.'
-    return
+    errorMessage.value = 'All fields are required.';
+    return;
   }
 
-  isSubmitting.value = true
+  isSubmitting.value = true;
 
   try {
-    // Make the registration request
+    // Make the registration request (JSON payload is fine here)
     await axios.post('/users', {
       username: username.value,
       first_name: firstName.value,
       last_name: lastName.value,
       email: email.value,
       password: password.value,
-      role: role.value
-    })
+      role: role.value,
+    });
 
-    // After successful registration, perform auto-login
-    const loginResponse = await axios.post('/auth/login', {
-      username: username.value, // Assuming username is used for login
-      password: password.value
-    })
+    // After successful registration, perform auto‑login.
+    // Use URLSearchParams to send form‑encoded data.
+    const loginFormData = new URLSearchParams();
+    loginFormData.append('username', username.value);
+    loginFormData.append('password', password.value);
 
-    const token = loginResponse.data.access_token
+    const loginResponse = await axios.post('/auth/login', loginFormData, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
 
-    // Store the token using your Axios plugin
-    setAuthToken(token)
+    const token = loginResponse.data.access_token;
+    setAuthToken(token);
 
-    // Decode the token to extract role and user_id
-    const tokenData = parseJwt(token)
+    // Decode token and commit auth state
+    const tokenData = parseJwt(token);
+    store.commit('setAuth', { token, role: tokenData.role });
 
-    // Update Vuex store with auth details
-    store.commit('setAuth', { token, role: tokenData.role })
-
-    // Show success message
-    successMessage.value = 'Registration successful! Redirecting to dashboard...'
+    successMessage.value = 'Registration successful! Redirecting to dashboard...';
 
     // Redirect based on role after a short delay
     setTimeout(() => {
-      redirectByRole(tokenData.role)
-    }, 2000)
+      redirectByRole(tokenData.role);
+    }, 2000);
   } catch (error) {
-    console.error('Registration or login failed:', error)
+    console.error('Registration or login failed:', error);
     if (error.response && error.response.data && error.response.data.detail) {
-      errorMessage.value = error.response.data.detail
+      errorMessage.value = error.response.data.detail;
     } else {
-      errorMessage.value = 'An unexpected error occurred. Please try again.'
+      errorMessage.value = 'An unexpected error occurred. Please try again.';
     }
   } finally {
-    isSubmitting.value = false
-  }
-}
-
-// Function to decode JWT token
-function parseJwt(token) {
-  try {
-    const base64Url = token.split('.')[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(function(c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-        })
-        .join('')
-    )
-    return JSON.parse(jsonPayload)
-  } catch (e) {
-    console.error('Failed to parse JWT:', e)
-    return {}
-  }
-}
-
-// Function to redirect based on user role
-function redirectByRole(role) {
-  if (role === 'teacher') {
-    location.href = '/teacher'
-  } else if (role === 'parent' || role === 'class_rep') {
-    location.href = '/parent'
-  } else if (role === 'admin') {
-    location.href = '/admin'
-  } else {
-    // Default redirect if role is unrecognized
-    location.href = '/'
+    isSubmitting.value = false;
   }
 }
 </script>

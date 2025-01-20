@@ -41,32 +41,61 @@ const store = useStore();
 const username = ref('');
 const password = ref('');
 
-async function login() {
-  try {
-    const res = await axios.post('/auth/login', { username: username.value, password: password.value });
-    const token = res.data.access_token;
-
-    setAuthToken(token);
-
-    const tokenData = parseJwt(token);
-    store.commit('setAuth', { token, role: tokenData.role });
-
-    redirectByRole();
-  } catch (err) {
-    console.error('Login failed:', err);
-  }
-}
-
+/**
+ * Convert JWT into decoded JSON data
+ */
 function parseJwt(token) {
   const base64Url = token.split('.')[1];
-  return JSON.parse(decodeURIComponent(atob(base64Url).split('').map(c => {
-    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-  }).join('')));
+  return JSON.parse(decodeURIComponent(
+    atob(base64Url)
+      .split('')
+      .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+      .join('')
+  ));
 }
 
+/**
+ * Redirect based on role
+ */
 function redirectByRole() {
   if (store.state.role === 'teacher') location.href = '/teacher';
   else if (store.state.role === 'parent' || store.state.role === 'class_rep') location.href = '/parent';
   else if (store.state.role === 'admin') location.href = '/admin';
 }
+
+/**
+ * Sends form data to match your OAuth2PasswordRequestForm backend
+ */
+async function login() {
+  try {
+    // Convert credentials to form-encoded data
+    const formData = new URLSearchParams();
+    formData.append('username', username.value);
+    formData.append('password', password.value);
+
+    // POST with 'application/x-www-form-urlencoded'
+    const res = await axios.post('/auth/login', formData, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    const token = res.data.access_token;
+    setAuthToken(token); // Store the token in Axios defaults
+
+    // Decode and store role in Vuex
+    const tokenData = parseJwt(token);
+    store.commit('setAuth', { token, role: tokenData.role });
+
+    // Redirect to the appropriate dashboard
+    redirectByRole();
+  } catch (err) {
+    console.error('Login failed:', err);
+    // You could show a toast or error message here
+  }
+}
 </script>
+
+<style scoped>
+/* Add any component-specific styles here */
+</style>
