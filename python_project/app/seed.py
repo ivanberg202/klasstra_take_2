@@ -43,12 +43,12 @@ def seed():
                 first_name="John",
                 last_name="Doe",
                 email="john.doe@example.com",
-                password_hash=hash_password("TeacherPass123!"),
+                password_hash=hash_password("12341234"),
                 role="teacher",
             )
             db.add(teacher)
             db.commit()
-            print("Teacher user created: teacher1 / TeacherPass123!")
+            print("Teacher user created: teacher1 / 12341234")
         else:
             print("Teacher user already exists.")
 

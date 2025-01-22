@@ -1,6 +1,6 @@
 # filename: app/main.py
 from fastapi import FastAPI
-from app.routers import auth, users, classes, announcements, children, admin, teacher, upload, parents
+from app.routers import auth, users, classes, announcements, children, admin, teacher, upload, parents, ai
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import Base, engine
 from sqlalchemy import text, inspect
@@ -12,7 +12,7 @@ app = FastAPI(title="Klasstra")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this in production for security
+    allow_origins=["http://localhost:5173"],  # explicitly allow the Vue dev server origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,5 +55,6 @@ app.include_router(admin.router)
 app.include_router(teacher.router)
 app.include_router(upload.router)
 app.include_router(parents.router)
+app.include_router(ai.router)
 
 

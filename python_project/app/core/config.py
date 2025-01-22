@@ -20,4 +20,7 @@ class Settings:
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     RATE_LIMIT: int = 5 # announcements per minute per user
 
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+
+
 settings = Settings()

@@ -20,10 +20,10 @@
         </div>
       </section>
 
-      <!-- Create Announcement Section -->
+      <!-- Create Announcement Section (AI-Driven) -->
       <section>
         <h1 class="text-2xl font-bold mb-4">Create Announcement</h1>
-        <AnnouncementForm @announcementCreated="handleAnnouncementCreated" />
+        <AIAnnouncementForm @announcementCreated="handleAnnouncementCreated" />
       </section>
 
       <!-- Announcements List Section -->
@@ -50,71 +50,71 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue'
 import axios from '../plugins/axios.js'
-import { useStore } from 'vuex';
-import { useToast } from 'vue-toastification';
-import DefaultLayout from '../layouts/DefaultLayout.vue';
-import AnnouncementForm from '../components/AnnouncementForm.vue';
-import AnnouncementCard from '../components/AnnouncementCard.vue';
+import { useStore } from 'vuex'
+import { useToast } from 'vue-toastification'
+import DefaultLayout from '../layouts/DefaultLayout.vue'
+import AIAnnouncementForm from '../components/AIAnnouncementForm.vue'
+import AnnouncementCard from '../components/AnnouncementCard.vue'
 
-const store = useStore();
-const toast = useToast();
+const store = useStore()
+const toast = useToast()
 
 // State variables
-const classes = ref([]);
-const loadingClasses = ref(false);
+const classes = ref([])
+const loadingClasses = ref(false)
 
-const announcements = ref([]);
-const loadingAnnouncements = ref(false);
+const announcements = ref([])
+const loadingAnnouncements = ref(false)
 
 // Fetch assigned classes
 const fetchClasses = async () => {
-  loadingClasses.value = true;
+  loadingClasses.value = true
   try {
     const res = await axios.get('/teacher/my-classes', {
       headers: {
         Authorization: `Bearer ${store.state.token}`,
       },
-    });
-    classes.value = res.data;
+    })
+    classes.value = res.data
   } catch (err) {
-    console.error('Error fetching classes:', err);
-    toast.error('Failed to load classes.');
+    console.error('Error fetching classes:', err)
+    toast.error('Failed to load classes.')
   } finally {
-    loadingClasses.value = false;
+    loadingClasses.value = false
   }
-};
+}
 
 // Fetch announcements
 const fetchAnnouncements = async () => {
-  loadingAnnouncements.value = true;
+  loadingAnnouncements.value = true
   try {
     const res = await axios.get('/teacher/my-announcements', {
       headers: {
         Authorization: `Bearer ${store.state.token}`,
       },
-    });
-    announcements.value = res.data;
+    })
+    announcements.value = res.data
   } catch (err) {
-    console.error('Error fetching announcements:', err);
-    toast.error('Failed to load announcements.');
+    console.error('Error fetching announcements:', err)
+    toast.error('Failed to load announcements.')
   } finally {
-    loadingAnnouncements.value = false;
+    loadingAnnouncements.value = false
   }
-};
+}
 
 // Handle new announcement creation
 const handleAnnouncementCreated = () => {
-  fetchAnnouncements();
-  toast.success('Announcement created successfully!');
-};
+  fetchAnnouncements()
+  toast.success('Announcement created successfully!')
+}
 
 // On component mount
 onMounted(() => {
-  fetchClasses();
-  fetchAnnouncements();
-});
+  fetchClasses()
+  fetchAnnouncements()
+})
 </script>
 
 <style scoped>

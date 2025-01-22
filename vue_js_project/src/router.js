@@ -6,6 +6,8 @@ import DashboardTeacher from './pages/DashboardTeacher.vue';
 import DashboardParent from './pages/DashboardParent.vue';
 import DashboardAdmin from './pages/DashboardAdmin.vue';
 import store from './store/index.js'; // Import the store for route guards
+import AiAssistantPage from './pages/AiAssistantPage.vue'; // import
+
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -28,6 +30,11 @@ const routes = [
   },
   // Add a catch-all route for 404
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('./pages/NotFound.vue') },
+  { 
+    path: '/ai-assistant', 
+    component: AiAssistantPage,
+    meta: { requiresAuth: true, role: ['teacher', 'admin', 'class_rep'] } 
+  },
 ];
 
 const router = createRouter({
