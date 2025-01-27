@@ -44,7 +44,7 @@
             v-model="inputText"
             rows="5"
             class="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-            placeholder="Unstructured text here..."
+            placeholder="Example input: tomorrow cinema, need 5 eur in cash, back at usual time"
           ></textarea>
         </div>
         <button

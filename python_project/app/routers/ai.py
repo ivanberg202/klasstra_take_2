@@ -117,3 +117,46 @@ def generate_text(
     # 5. Parse and return the AI's content
     ai_content = response["choices"][0]["message"]["content"].strip()
     return AIResponse(output_text=ai_content)
+
+
+@router.post("/chat")
+def chat_with_ai(
+    payload: dict,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    """
+    Chat with the AI (GPT-3.5-turbo). Requires a valid JWT token (role 'teacher', 'admin', or 'class_rep').
+    """
+    # Decode the token to verify the user role
+    try:
+        decoded = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    role = decoded.get("role")
+    if role not in ["teacher", "admin", "class_rep"]:
+        raise HTTPException(status_code=403, detail="Not allowed to use AI endpoint")
+    
+    # Get the message sent by the user
+    user_message = payload.get('message')
+
+    # Set OpenAI API key
+    openai.api_key = settings.OPENAI_API_KEY
+    if not openai.api_key:
+        raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+
+    # Call OpenAI's chat API
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": user_message}],
+            max_tokens=150,
+            temperature=0.7,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"OpenAI API error: {e}")
+
+    # Return the AI's response
+    ai_response = response['choices'][0]['message']['content']
+    return {"response": ai_response}

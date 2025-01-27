@@ -3,4 +3,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Additional custom styles can go here. */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+body.light {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* Additional custom styles */

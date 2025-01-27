@@ -60,12 +60,12 @@ def seed():
                 first_name="Jane",
                 last_name="Smith",
                 email="jane.smith@example.com",
-                password_hash=hash_password("ParentPass123!"),
+                password_hash=hash_password("12341234"),
                 role="parent",
             )
             db.add(parent)
             db.commit()
-            print("Parent user created: parent1 / ParentPass123!")
+            print("Parent user created: parent1 / 12341234")
         else:
             print("Parent user already exists.")
 

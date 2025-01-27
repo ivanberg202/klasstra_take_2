@@ -46,6 +46,9 @@
         </div>
       </section>
     </div>
+
+    <!-- Chatbot Component -->
+    <Chatbot />
   </DefaultLayout>
 </template>
 
@@ -57,6 +60,7 @@ import { useToast } from 'vue-toastification'
 import DefaultLayout from '../layouts/DefaultLayout.vue'
 import AIAnnouncementForm from '../components/AIAnnouncementForm.vue'
 import AnnouncementCard from '../components/AnnouncementCard.vue'
+import Chatbot from '../components/Chatbot.vue'
 
 const store = useStore()
 const toast = useToast()
